@@ -63,6 +63,11 @@ ns.classes=
     id = 2,
     mask = 2,
     enUS = "Paladin"
+  },
+  EVOKER = {
+    id = 13,
+    mask = 4096,
+    enUS = "Evoker"
   }
 }
 
