@@ -1,0 +1,10 @@
+tag 91bcd61dd4a9054365ef4166928530df5ea57100 2.0.2
+Author:	Alar of Runetotem <alar@aspide.it>
+Date:	Sun Jul 4 14:42:27 2021 +0200
+
+commit 882feb0d2922696554621f41263e9a66e9482362
+Author: Alar of Runetotem <alar@aspide.it>
+Date:   Sun Jul 4 14:40:32 2021 +0200
+
+    Workaround for invalid boe items
+

@@ -1,0 +1,547 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	<Script file="MailCommander.lua"/>
+	<Font name="NumberFontNormalGreen" inherits="NumberFontNormal" virtual="true" >
+		<Color r="0.0" g="1.0" b="0"/>
+	</Font>
+	<Font name="GameFontYellowSmall" inherits="GameFontGreenSmall" virtual="true" >
+		<Color r="1.0" g="0.8" b="0"/>
+	</Font>
+	<Button name="MailCommanderItemButtonTemplate" virtual="true">
+		<!-- <CheckedTexture alphaMode="ADD" file="Interface\Buttons\CheckButtonHilight"/> -->
+		<!--<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent"/>-->
+		<Size>
+			<AbsDimension x="37" y="37"/>
+		</Size>
+		<Layers>
+			<Layer level="BORDER">
+				<Texture name="$parentIconTexture" parentKey="icon"/>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Disabled" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent" hidden="true">
+					<Size x="45" y="45"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK" textureSubLevel="2">
+				<FontString inherits="NumberFontNormal" justifyH="RIGHT" hidden="true" parentKey="Stock">
+					<Anchors>
+						<Anchor point="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="0" y="-2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="ARTWORK" textureSubLevel="2">
+				<FontString inherits="NumberFontNormal" justifyH="RIGHT" hidden="true" parentKey="ModifiedStock">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset>
+								<AbsDimension x="-2" y="2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<NormalTexture name="$parentNormalTexture" file="Interface\Buttons\UI-Quickslot2">
+			<Size>
+				<AbsDimension x="64" y="64"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="-1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</NormalTexture>
+		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
+		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+	</Button>
+	<Frame name="MailCommanderItemTemplate" enableMouse="true" virtual="true">
+		<Size x="153" y="64"/>
+		<Layers>
+			<Layer level="BACKGROUND"  textureSubLevel="-6">
+				<Texture parentKey="Bg" name="$parentBg" file="Interface\MailFrame\UI-MailFrameBG" horizTile="true" vertTile="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="1" y="0"/>
+						<Anchor point="BOTTOMRIGHT" x="-3" y="25"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="SlotTexture" file="Interface\Buttons\UI-EmptySlot">
+					<Size x="64" y="64"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-13" y="13"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="NameFrame" file="Interface\MerchantFrame\UI-Merchant-LabelSlots">
+					<Size x="128" y="64"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.SlotTexture" relativePoint="RIGHT" x="-9" y="-10"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Name" inherits="GameFontNormalSmall" text="Item Name" justifyH="LEFT" justifyV="TOP">
+					<Size x="100" y="30"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.SlotTexture" relativePoint="RIGHT" x="-5" y="5"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Keep" inherits="GameFontYellowSmall" justifyH="LEFT" hidden="true" wordwrap="false">
+					<Anchors>
+						<Anchor point="LEFT"  x="42" y="3" />
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Cap" inherits="GameFontGreenSmall" justifyH="RIGHT" hidden="true">
+					<Anchors>
+						<Anchor point="RIGHT"  x="-4" y="3" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentItemButton" parentKey="ItemButton" inherits="MailCommanderItemButtonTemplate">
+				<Anchors>
+					<Anchor point="CENTER" relativekey="$parent.SlotTexture" x="0" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:OnItemClicked(self,button)
+					</OnClick>
+					<OnEnter >
+						MailCommander:OnItemEnter(self,button)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+					<OnReceiveDrag>
+						MailCommander:OnItemDropped(self)
+					</OnReceiveDrag>
+					<OnDragStart>
+						PickupItem(MailCommander:GetItemID(self:GetAttribute("itemlink")))
+					</OnDragStart>
+					<OnDragStop>
+						MailCommander:ScheduleTimer(ClearCursor,0.1)
+					</OnDragStop>
+					<OnLoad>
+						self:RegisterForClicks("LeftButtonUp","RightButtonUp")
+						self:RegisterForDrag("LeftButton")
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Frame>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Bg" x="0" y="0" />
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Bg" x="0" y="0" />
+				</Anchors>
+				<Scripts>
+					<OnLEave>
+					</OnLEave>
+				</Scripts>
+			</Frame>
+		</Frames>
+	</Frame>
+	<Frame name="MailCommander" virtual="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true" hidden="true" inherits="PortraitFrameTemplate"><!-- inherits="ButtonFrameTemplate">-->
+		<Size x="336" y="444"/>
+		<Attributes>
+			<Attribute name="UIPanelLayout-defined" type="boolean" value="true"/>
+			<Attribute name="UIPanelLayout-enabled" type="boolean" value="true"/>
+			<Attribute name="UIPanelLayout-area" type="string" value="left"/>
+			<Attribute name="UIPanelLayout-pushable" type="number" value="1"/>
+			<Attribute name="UIPanelLayout-whileDead" type="boolean" value="true"/>
+			<Attribute name="UIPanelLayout-width" type="number" value="350"/>
+		</Attributes>
+		<Layers>
+			<Layer level="BORDER">
+				<FontString parentKey="NameText" inherits="GameFontNormal" text="MailCommander">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parent" relativePoint="TOP" x="0" y="-5"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="PageText" inherits="GameFontNormal" text="Page">
+					<Size x="104" y="0"/>
+					<Anchors>
+						<Anchor point="BOTTOM" x="0" y="10"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Info" inherits="GameFontWhite" text="Placeholder" justifyH="LEFT">
+					<Size x="110" y="30"/>
+					<Anchors>
+						<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="-20" />
+						<Anchor point="LEFT" x="10" y="0" />
+						<Anchor point="RIGHT" x="-80" y="0" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="InfoClick" enableMouse="true" hidden="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Info" />
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Info" />
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						MailCommander:OnInfoEnter(self)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+					<OnMouseUp>
+						MailCommander:Gui()
+					</OnMouseUp>
+				</Scripts>
+			</Frame>
+			<Button parentKey="Help" inherits="MainMenuBarMicroButton" hidden="false">
+				<Size x="32" y="40" />
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						MailCommander:OnHelpEnter(self)
+					</OnEnter>
+					<OnClick>
+						MailCommander:OnHelpClick(self)
+					</OnClick>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+					<OnLoad>
+						LoadMicroButtonTextures(self, "MainMenu");
+						self.tooltipText = "Tooltip"
+        				self.newbieText = "Newbie tooltip"
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Frame parentArray="Additional" name="$parentAdditional" inherits="MailCommanderItemTemplate" hidden="true">
+				<KeyValues>
+					<KeyValue key="section" value="Drop" type="string"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Help" relativePoint="BOTTOMLEFT" x="3" y="-2"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self.ItemButton:SetAttribute('section',"drop")
+					</OnLoad>
+				</Scripts>
+			</Frame>
+			<Frame parentArray="Items" inherits="MailCommanderItemTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="10" y="-60"/>
+				</Anchors>
+			</Frame>
+			<Frame parentKey="Filter" name="$parentFilter" inherits="UIDropDownMenuTemplate" enableMouse="true">
+
+				<Anchors>
+					<Anchor point="TOPLEFT" x="-10" y="-28"/>
+				</Anchors>
+			</Frame>
+			<Button parentKey="AddContact" inherits="UIPanelButtonTemplate" text="ADD" hidden="true">
+				<Size x="70" y="30"/>
+				<Anchors>
+					<Anchor point="TOPRIGHt"  relativePoint="TOPRIGHT" x="-10" y="-25"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:ShowAddCustomToon()
+					</OnClick>
+					<OnEnter>
+						MailCommander:OnAddContactEnter(self)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<Button parentKey="AddCategory" inherits="UIPanelButtonTemplate" text="ADD" hidden="true">
+				<Size x="70" y="30"/>
+				<Anchors>
+					<Anchor point="TOPRIGHt"  relativePoint="TOPRIGHT" x="-10" y="-25"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:ShowAddCategory()
+					</OnClick>
+					<OnEnter>
+						MailCommander:OnAddCategoryEnter(self)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<Button parentKey="RemoveCategory" inherits="UIPanelButtonTemplate" text="REMOVE" hidden="true">
+				<Size x="70" y="30"/>
+				<Anchors>
+					<Anchor point="TOPRIGHt"  relativePoint="TOPRIGHT"  x="-82" y="-25"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:ShowRemoveCategory()
+					</OnClick>
+					<OnEnter>
+						MailCommander:OnRemoveCategoryEnter(self)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<Button parentKey="Send"  inherits="UIPanelButtonTemplate" text="SEND_LABEL" hidden="true">
+				<Size x="100" y="30"/>
+				<Anchors>
+					<Anchor point="TOPRIGHt"  relativePoint="TOPRIGHT" x="-55" y="-28"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:OnSendClick(self,button)
+					</OnClick>
+					<OnEnter>
+						MailCommander:OnSendEnter(self)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<CheckButton name="$parentAll" parentKey="All" inherits="ChatConfigSmallCheckButtonTemplate" text="ALL" hidden="true">
+				<Anchors>
+					<Anchor point="TOPRIGHT"  relativePoint="TOPRIGHT" x="-35" y="-33"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self.func=function(self,value) MailCommander:OnAllClick(self,value) end
+						self.tooltip="Placeholder"
+					</OnLoad>
+				</Scripts>
+			</CheckButton>
+			<Button parentKey="Delete" inherits="UIPanelButtonTemplate" text="REMOVE" hidden="true">
+				<Size x="130" y="30"/>
+				<Anchors>
+					<Anchor point="TOPRIGHt" relativePoint="TOPRIGHT" x="-10" y="-28"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:OnDeleteClick(self,button)
+					</OnClick>
+					<OnEnter>
+						MailCommander:OnDeleteEnter(self)
+					</OnEnter>
+					<OnLeave>
+						MailCommander:CloseTip()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<Button parentKey="PrevPageButton">
+				<Size x="32" y="32"/>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="25" y="20"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString parentKey="Text" inherits="GameFontNormal" justifyH="LEFT" text="PREV">
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.PrevPageButton" relativePoint="RIGHT"/>
+							</Anchors>
+						</FontString>
+						<Texture file="Interface\Buttons\UI-PageButton-Background">
+							<Size x="32" y="32"/>
+							<Anchors>
+								<Anchor point="CENTER" x="0" y="1"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>
+						MailCommander:OnArrowsClick(self,'prev')
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Down"/>
+				<DisabledTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Disabled"/>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+			</Button>
+			<Button parentKey="NextPageButton">
+				<Size x="32" y="32"/>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="310" y="20"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString parentKey="Text" inherits="GameFontNormal" justifyH="RIGHT" text="NEXT">
+							<Anchors>
+								<Anchor point="RIGHT" relativeKey="$parent.NextPageButton" relativePoint="LEFT" x="-3" y="0"/>
+							</Anchors>
+						</FontString>
+						<Texture file="Interface\Buttons\UI-PageButton-Background">
+							<Size x="32" y="32"/>
+							<Anchors>
+								<Anchor point="CENTER" x="0" y="1"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>
+						MailCommander:OnArrowsClick(self,'next')
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Down"/>
+				<DisabledTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Disabled"/>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+			</Button>
+			<Button parentKey="tabNEED" name="$parentTab1" inherits="PanelTabButtonTemplate" id="1" text="NEED">
+				<Anchors>
+					<Anchor point="CENTER" relativePoint="BOTTOMLEFT" x="50" y="-15"/>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+						GameTooltip:SetText(self.tooltip, 0,1.0,0 );
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+					<OnClick>
+						MailCommander:OnTabClick(self)
+					</OnClick>
+					<OnLoad>
+						self.tooltip=_G.NEED
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Button parentKey="tabSEND" name="$parentTab2" inherits="PanelTabButtonTemplate" id="2" text="SEND_LABEL">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentTab1" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+						GameTooltip:SetText(self.tooltip, 0,1.0,0 );
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+					<OnClick>
+						MailCommander:OnTabClick(self,button)
+					</OnClick>
+					<OnLoad>
+						self.tooltip=_G.SEND_LABEL
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Button parentKey="tabFILTER" name="$parentTab3" inherits="PanelTabButtonTemplate" id="3" text="FILTER">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentTab2" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+						GameTooltip:SetText(self.tooltip, 0,1.0,0 );
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+					<OnClick>
+						MailCommander:OnTabClick(self,button)
+					</OnClick>
+					<OnLoad>
+						self.tooltip=_G.FILTER
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Button parentKey="tabCATEGORIES" name="$parentTab4" inherits="PanelTabButtonTemplate" id="4" text="CATEGORIES">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentTab3" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+						GameTooltip:SetText(self.tooltip, 0,1.0,0 );
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+					<OnClick>
+						MailCommander:OnTabClick(self,button)
+					</OnClick>
+					<OnLoad>
+						self.tooltip=_G.CATEGORIES
+					</OnLoad>
+				</Scripts>
+			</Button>
+
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				MailCommander:OnLoad(self)
+			</OnLoad>
+			<OnShow>
+				local ISEND=self.tabSEND:GetID()
+		        if SendMailFrame:IsVisible() then
+          			PanelTemplates_EnableTab(self,ISEND)
+        		else
+          			PanelTemplates_DisableTab(self,ISEND)
+        		end
+				MailCommander:Open()
+			</OnShow>
+			<OnHide>
+				MailCommander:ResetPanel()
+				MailCommander:Close(self)
+			</OnHide>
+			<OnReceiveDrag>
+			</OnReceiveDrag>
+			<OnMouseWheel>
+			</OnMouseWheel>
+		</Scripts>
+	</Frame>
+	<Frame name="MailCommanderSplitLabel" frameStrata="HIGH" parent="StackSplitFrame" toplevel="true" hidden="true" clampedToScreen="true">
+		<Size>
+			<AbsDimension x="172" y="80"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\MoneyFrame\UI-MoneyFrame2">
+					<Size>
+						<AbsDimension x="256" y="80"/>
+					</Size>
+					<TexCoords left="0" right="0.671875" top="0.10" bottom="0.75"/>
+				</Texture>
+				<FontString parentKey="Text" inherits="GameFontHighlight" justifyH="CENTER" text="Prova">
+					<Anchors>
+						<Anchor point="BOTTOM" x="0" y="20"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="Reset" inherits="UIPanelButtonTemplate" text="RESET" >
+				<Size x="64" y="24"/>
+				<Anchors>
+					<Anchor point="TOP" x="0" y="-5"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MailCommander:OnResetClick(StackSplitFrame.owner)
+					</OnClick>
+					<OnEnter>
+						MailCommander:OnResetEnter(self:GetParent())
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Anchors>
+			<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="18"/>
+		</Anchors>
+		<Scripts>
+			<OnHide>
+				self:Hide()
+				StackSplitFrame.StackSplitText:SetTextColor(1,1,1)
+			</OnHide>
+
+		</Scripts>
+	</Frame>
+</Ui>
