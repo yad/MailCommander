@@ -1,9 +1,9 @@
 ## Interface: 100000
-## Title: MailCommander 2 2.0.2
+## Title: MailCommander 2 2.0.3
 ## Notes: Manages items distribution between multiple toons
 ## Notes-itIT: Gestisce la distribuzione di oggetti fra personaggi multipli
 ## Author: Alar of Daggerspine
-## Version: 2.0.2 100000
+## Version: 2.0.3 100000
 ## X-Revision: 882feb0
 ## eMail: alar@aspide.it
 ## URL: http://wow.aspide.it
