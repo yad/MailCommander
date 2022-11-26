@@ -82,7 +82,7 @@ local GetItemInfo=GetItemInfo
 local UnitHealth=UnitHealth
 local UnitHealthMax=UnitHealthMax
 local setmetatable=setmetatable
-local NUM_BAG_SLOTS=NUM_BAG_SLOTS
+local ALL_PLAYER_NUMBER_BAG_SLOTS=NUM_BAG_SLOTS+1
 local InCombatLockdown=InCombatLockdown
 local error=error
 local tinsert=tinsert
@@ -633,7 +633,7 @@ end
 -- @treturn number Total bag slots
 function lib:GetTotalBagSlots()
 	local i=0
-	for bag=0,NUM_BAG_SLOTS do
+	for bag=0,ALL_PLAYER_NUMBER_BAG_SLOTS do
 		i=i+GetContainerNumSlots(bag)
 	end
 	return i
@@ -662,7 +662,7 @@ function lib:ScanBags(index,value,startbag,startslot)
 	value=value or 0
 	startbag=startbag or 0
 	startslot=startslot or 1
-	for bag=startbag,NUM_BAG_SLOTS do
+	for bag=startbag,ALL_PLAYER_NUMBER_BAG_SLOTS do
 		for slot=startslot,GetContainerNumSlots(bag),1 do
 			local itemlink=GetContainerItemLink(bag,slot)
 			if (itemlink) then
@@ -690,7 +690,7 @@ end
 -- @treturn number Total bag slots
 function lib:GetBagSlotCount()
 	local free,total=0,0
-	for bag=0,NUM_BAG_SLOTS do
+	for bag=0,ALL_PLAYER_NUMBER_BAG_SLOTS do
 		free=free+(GetContainerNumFreeSlots(bag) or 0)
 		total=total+(GetContainerNumSlots(bag) or 0)
 	end
