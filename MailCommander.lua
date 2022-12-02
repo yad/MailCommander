@@ -477,24 +477,48 @@ local basepresets = { -- #basepresets
         end,
         validate = function(self, _, toon, bag, slot)
             local itemlink = C_Container.GetContainerItemLink(bag, slot)
-            if itemlink then
-                local id = parseLink(itemlink)
-                if not id then
-                    self:Print(C("Invalid item ", "Orange"), itemlink)
-                    return
-                end
-                local min = getProperty('keep', toon, id, 0)
-                local max = getProperty('cap', toon, id, CAP)
-                local level = GetDetailedItemLevelInfo(itemlink)
-                local itemType, itemSubType = select(6, GetItemInfoInstant(id))
-                if db.items[id].boe and IsEquippableItem(itemlink) and level >= min and level <= max then
-                    if itemType ~= LE_ITEM_CLASS_WEAPON and itemType ~= LE_ITEM_CLASS_WEAPON then
-                        return false
-                    end
-                    local rc, alreadybound = pcall(C_Item.IsBound, ItemLocation:CreateFromBagAndSlot(bag, slot))
-                    return not alreadybound
-                end
+            if not itemlink then
+                return false
             end
+
+            local id = parseLink(itemlink)
+            if not id then
+                self:Print(C("Invalid item ", "Orange"), itemlink)
+                return false
+            end
+
+            if not IsEquippableItem(itemlink) then
+                return false
+            end
+
+            local rc, alreadybound = pcall(C_Item.IsBound, ItemLocation:CreateFromBagAndSlot(bag, slot))
+            if alreadybound then
+                return false
+            end
+
+            local itemType, itemSubType = select(6, GetItemInfoInstant(id))
+
+            if itemType ~= Enum.ItemClass.Weapon and itemType ~= Enum.ItemClass.Armor then
+                return false
+            end
+
+            local min = getProperty('keep', toon, id, 0)
+            local max = getProperty('cap', toon, id, CAP)
+            local level = GetDetailedItemLevelInfo(itemlink)
+
+            -- DEFAULT_CHAT_FRAME:AddMessage("====================")
+            -- DEFAULT_CHAT_FRAME:AddMessage("Item " .. itemlink)
+            -- DEFAULT_CHAT_FRAME:AddMessage("id " .. id)
+            -- DEFAULT_CHAT_FRAME:AddMessage("IsEquippableItem " .. tostring(IsEquippableItem(itemlink)))
+            -- DEFAULT_CHAT_FRAME:AddMessage("alreadybound " .. tostring(alreadybound))
+            -- DEFAULT_CHAT_FRAME:AddMessage("itemType " .. itemType)
+            -- DEFAULT_CHAT_FRAME:AddMessage("Enum.ItemClass.Weapon " .. Enum.ItemClass.Weapon .. " " .. tostring(itemType ~= Enum.ItemClass.Weapon))
+            -- DEFAULT_CHAT_FRAME:AddMessage("Enum.ItemClass.Armor " .. Enum.ItemClass.Armor .. " " .. tostring(itemType ~= Enum.ItemClass.Armor))
+            -- DEFAULT_CHAT_FRAME:AddMessage("min " .. min)
+            -- DEFAULT_CHAT_FRAME:AddMessage("level " .. level)
+            -- DEFAULT_CHAT_FRAME:AddMessage("max " .. max)
+
+            return level >= min and level <= max
         end,
         res = false,
         cap = L['Maximum Level'],
