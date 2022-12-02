@@ -30,11 +30,6 @@ addon:Debug("Started with debug enabled")
 local C = addon:GetColorTable()
 local L = addon:GetLocale()
 local I = LibStub("LibItemUpgradeInfo-1.0")
-local GetContainerNumSlots = C_Container.GetContainerNumSlots
-local GetContainerItemLink = C_Container.GetContainerItemLink
-local GetContainerItemInfo = C_Container.GetContainerItemInfo
-local UseContainerItem = C_Container.UseContainerItem
-local ALL_PLAYER_NUMBER_BAG_SLOTS = NUM_BAG_SLOTS + 1
 local math = math
 local tContains = tContains
 local toc = select(4, GetBuildInfo())
@@ -58,6 +53,7 @@ local MONEY = MONEY
 local ITEM_BNETACCOUNTBOUND = ITEM_BNETACCOUNTBOUND
 local toc = select(4, GetBuildInfo())
 local ISCLASSIC = toc < 90000
+local NUM_BAG_SLOTS = NUM_TOTAL_BAG_FRAMES
 local function keep(toon, id)
     if not toon then
         return 0
@@ -214,17 +210,21 @@ local function Bags()
     local slot = 0
     return function()
         if not bags[bag] then
-            bags[bag] = GetContainerNumSlots(bag)
+            bags[bag] = C_Container.GetContainerNumSlots(bag)
         end
         slot = slot + 1
         if slot > bags[bag] then
             slot = 1
             bag = bag + 1
         end
-        if bag <= ALL_PLAYER_NUMBER_BAG_SLOTS then
+        if bag <= NUM_BAG_SLOTS then
             return bag, slot
         end
     end
+end
+local function GetContainerItemInfo(bagId, slotId)
+    local t = C_Container.GetContainerItemInfo(bagId, slotId)
+    return t.stackCount, t.isLocked
 end
 local function currentToon()
     return currentTab == INEED and currentRequester or currentReceiver
@@ -476,32 +476,22 @@ local basepresets = { -- #basepresets
             return count
         end,
         validate = function(self, _, toon, bag, slot)
-            local itemInfo = GetContainerItemInfo(bag, slot)
-            if itemInfo then
-                local itemlink = itemInfo.hyperlink
-                local id = itemInfo.itemID
+            local itemlink = C_Container.GetContainerItemLink(bag, slot)
+            if itemlink then
+                local id = parseLink(itemlink)
                 if not id then
-                    addon:Print(C("Invalid item ", "Orange"), itemlink)
+                    self:Print(C("Invalid item ", "Orange"), itemlink)
                     return
                 end
-
-                local _, _, _, _, _, itemType = GetItemInfo(id)
-                if IsEquippableItem(itemlink) then
-                    if not itemType == "Armure" or not itemType == "Arme" then
+                local min = getProperty('keep', toon, id, 0)
+                local max = getProperty('cap', toon, id, CAP)
+                local level = GetDetailedItemLevelInfo(itemlink)
+                local itemType, itemSubType = select(6, GetItemInfoInstant(id))
+                if db.items[id].boe and IsEquippableItem(itemlink) and level >= min and level <= max then
+                    if itemType ~= LE_ITEM_CLASS_WEAPON and itemType ~= LE_ITEM_CLASS_WEAPON then
                         return false
                     end
-
-                    local _, _, quality = GetItemInfo(id)
-                    if (quality < Enum.ItemQuality.Uncommon) then
-                        return false
-                    end
-
                     local rc, alreadybound = pcall(C_Item.IsBound, ItemLocation:CreateFromBagAndSlot(bag, slot))
-
-                    -- if not alreadybound then
-                    -- 	addon:Print(C("BOE unbound item ","Green"),itemlink)
-                    -- end
-
                     return not alreadybound
                 end
             end
@@ -558,7 +548,7 @@ local GameTooltip = CreateFrame("GameTooltip", "MailCommanderTooltip", UIParent,
 
 local function checkBags()
     wipe(bags)
-    for i = 1, ALL_PLAYER_NUMBER_BAG_SLOTS do
+    for i = 1, NUM_BAG_SLOTS do
         local item = GetInventoryItemID("PLAYER", CONTAINER_BAG_OFFSET + i)
         if item then
             bags[item] = bags[item] + 1
@@ -1248,6 +1238,7 @@ function addon:OnInitializedContinue()
 end
 function addon:applyDEBUG(value)
     self.debug = value
+
 end
 function addon:MigrateDatabase()
     local DBVAR = GetAddOnMetadata("MailCommander", "X-Database")
@@ -1369,7 +1360,8 @@ function addon:StartTooltips()
         return
     end
     self:SecureHookScript(_G.GameTooltip, "OnHide", "CloseDrag")
-    --	self:SecureHookScript(_G.GameTooltip,"OnTooltipSetItem", "attachItemTooltip")
+
+    -- self:SecureHookScript(_G.GameTooltip,"OnTooltipSetItem", "attachItemTooltip")
     --	self:SecureHookScript(_G.ItemRefTooltip,"OnTooltipSetItem", "a2")
     --	self:SecureHookScript(_G.ItemRefShoppingTooltip1,"OnTooltipSetItem", "a3")
     --	self:SecureHookScript(_G.ItemRefShoppingTooltip2,"OnTooltipSetItem", "a4")
@@ -1381,7 +1373,7 @@ function addon:StartTooltips()
 end
 function addon:StopTooltips()
     self:Unhook(_G.GameTooltip, "OnHide")
-    --	self:Unhook(_G.GameTooltip,"OnTooltipSetItem")
+    self:Unhook(_G.GameTooltip, "OnTooltipSetItem")
     --	self:Unhook(_G.ItemRefTooltip,"OnTooltipSetItem")
     --	self:Unhook(_G.ItemRefShoppingTooltip1,"OnTooltipSetItem")
     --	self:Unhook(_G.ItemRefShoppingTooltip2,"OnTooltipSetItem")
@@ -1401,10 +1393,12 @@ function addon:OnDatabaseShutdown()
     end
     db.updateStock[thisToon] = date("%Y-%m-%d %H:%M:%S", time())
     for bag, slot in Bags() do
-        local containerInfo = GetContainerItemInfo(bag, slot)
-        local itemId = containerInfo.itemID
-        if itemId then
-            db.stock[thisToon][itemId] = GetItemCount(itemId, true) - bags[itemId]
+        local t = C_Container.GetContainerItemInfo(bag, slot)
+        if (t) then
+            local itemId = t.itemID
+            if itemId then
+                db.stock[thisToon][itemId] = GetItemCount(itemId, true) - bags[itemId]
+            end
         end
     end
     db.stock[thisToon]['gold'] = Count:Total("gold", thisToon)
@@ -1979,14 +1973,11 @@ function addon:OnDeleteClick(this, button)
 end
 
 local function FillMailSlot(bag, slot)
-    local containerInfo = GetContainerItemInfo(bag, slot)
-    local count = containerInfo.stackCount
-    local locked = containerInfo.isLocked
-    addon:Debug("Filling from", bag, slot, GetContainerItemInfo(bag, slot))
+    local count, locked = GetContainerItemInfo(bag, slot)
     if locked or not count then
         addon:ScheduleTimer(FillMailSlot, 0.01, bag, slot)
     else
-        UseContainerItem(bag, slot)
+        C_Container.UseContainerItem(bag, slot)
     end
 end
 function addon:Mail(itemId)
@@ -2041,13 +2032,12 @@ function addon:SearchItem(itemId)
     end
     -- DevTools_Dump({'needed',needed})
     for bagId, slotId in Bags() do
-        local itemInfo = GetContainerItemInfo(bagId, slotId)
-        if itemInfo then
-            local itemlink = itemInfo.hyperlink
-            local id = itemInfo.itemID
+        local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
+        if itemLink then
+            local id = parseLink(itemLink)
             if id then
-                local containerInfo = GetContainerItemInfo(bagId, slotId)
-                local n = containerInfo.stackCount
+                local n = GetContainerItemInfo(bagId, slotId)
+                print("Check", bagId, slotId, n, itemLink, C_Container.GetContainerItemInfo(bagId, slotId))
                 local GotIt = false
                 if needed[id] then
                     -- self:Debug("Counting",id,itemLink)
@@ -2081,7 +2071,7 @@ function addon:SearchItem(itemId)
         table.sort(sortable)
         for i = 1, #sortable do
             local qt, itemId, bagId, slotId = strsplit(":", sortable[i])
-            local itemLink = GetContainerItemLink(bagId, slotId)
+            local itemLink = C_Container.GetContainerItemLink(bagId, slotId)
             if tobesent[itemId] > 0 then
                 qt = 10000 - tonumber(qt)
                 self:Debug(itemLink, qt, tobesent[itemId])
@@ -2127,13 +2117,12 @@ function addon:NormalSearchItem(itemId)
     wipe(needed)
     local toon = currentReceiver
     for bagId, slotId in Bags() do
-        local bagItemId = GetContainerItemID(bagId, slotId)
+        local bagItemId = C_Container.GetContainerItemID(bagId, slotId)
         if bagItemId then
             self:Debug(bagId, slotId, itemId, bagItemId)
             if itemId then
                 if Count:IsSendable(itemId, bagItemId, toon, bagId, slotId) then
-                    local containerInfo = GetContainerItemInfo(bagId, slotId)
-                    local n = containerInfo.stackCount
+                    local n = GetContainerItemInfo(bagId, slotId)
                     tobesent[bagItemId] = Count:Sendable(itemId, toon)
                     tinsert(sortable, format("%05d:%s:%s:%s", 10000 + bags[bagItemId] - n, bagItemId, bagId, slotId))
                 end
@@ -2142,8 +2131,7 @@ function addon:NormalSearchItem(itemId)
                     local isdisabled = addon:IsDisabled(itemid, toon)
                     if not isdisabled then
                         if Count:IsSendable(itemid, bagItemId, toon, bagId, slotId) then
-                            local containerInfo = GetContainerItemInfo(bagId, slotId)
-                            local n = containerInfo.stackCount
+                            local n = GetContainerItemInfo(bagId, slotId)
                             tobesent[bagItemId] = Count:Sendable(itemid, toon)
                             tinsert(sortable, format("%05d:%s:%s:%s", 10000 + bags[bagItemId] - n, bagItemId, bagId, slotId))
                         end
@@ -2218,8 +2206,8 @@ function addon:MoveItemToSendBox(itemId, bagId, slotId, qt)
     if needsplit then
         local freebag, freeslot = self:ScanBags(0, 0)
         if freebag and freeslot then
-            SplitContainerItem(bagId, slotId, qt)
-            PickupContainerItem(freebag, freeslot)
+            C_Container.SplitContainerItem(bagId, slotId, qt)
+            C_Container.PickupContainerItem(freebag, freeslot)
             FillMailSlot(freebag, freeslot)
         else
             self:Print(L["Need at least one free slot in bags in order to send less than a full stack"])
