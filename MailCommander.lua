@@ -502,11 +502,13 @@ local basepresets = { -- #basepresets
                 return false
             end
 
-            local min = getProperty('keep', toon, id, 0)
-            local max = getProperty('cap', toon, id, CAP)
+            local min = keep(toon, "boe")
+            local max = cap(toon, "boe")
+
             local level = GetDetailedItemLevelInfo(itemlink)
 
             -- DEFAULT_CHAT_FRAME:AddMessage("====================")
+            -- DEFAULT_CHAT_FRAME:AddMessage("Toon " .. toon)
             -- DEFAULT_CHAT_FRAME:AddMessage("Item " .. itemlink)
             -- DEFAULT_CHAT_FRAME:AddMessage("id " .. id)
             -- DEFAULT_CHAT_FRAME:AddMessage("IsEquippableItem " .. tostring(IsEquippableItem(itemlink)))
